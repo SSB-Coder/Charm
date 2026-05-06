@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+face_landmarker.task
+*.json
+PROJECT_DOCUMENTATION.txt
+DETAILED_DOCUMENTATION_PART1.txt
+DETAILED_DOCUMENTATION_PART2.txt
