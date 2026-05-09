@@ -225,9 +225,7 @@ def main() -> None:
             left_iris = LandmarkProcessor.get_iris_center(landmarks, config.LEFT_IRIS, frame_w_px, frame_h_px)
             right_iris = LandmarkProcessor.get_iris_center(landmarks, config.RIGHT_IRIS, frame_w_px, frame_h_px)
 
-            # Blink-freeze: prevent cursor jumping down during blinks
-            # Uses both raw EAR check AND tracker state to cover the full blink lifecycle
-            # (including transition frames where EAR is above threshold but iris hasn't settled)
+            # Blink-freeze: hold cursor while any eye is mid-blink
             left_ear = compute_ear(landmarks, config.LEFT_EYE_EAR, frame_w_px, frame_h_px)
             right_ear = compute_ear(landmarks, config.RIGHT_EYE_EAR, frame_w_px, frame_h_px)
             blink_threshold = gesture.current_ear_threshold

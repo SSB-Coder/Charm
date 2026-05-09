@@ -310,7 +310,6 @@ class GestureDetector:
             self._last_right_blink_time = now
             self._left_suppress_until = now + config.CROSS_EYE_SUPPRESSION_MS / 1000.0
 
-        # Single-eye blink → click events
         if left_blinked:
             if self._double_click.check_left(now):
                 events.append(GestureEvent.DOUBLE_LEFT_CLICK)
