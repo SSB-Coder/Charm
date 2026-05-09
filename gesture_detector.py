@@ -247,6 +247,14 @@ class GestureDetector:
         return self._scroll_mode
 
     @property
+    def is_blinking(self) -> bool:
+        """True if either eye is mid-blink (not fully OPEN)."""
+        return (
+            self._left_eye.state != _EyeState.OPEN
+            or self._right_eye.state != _EyeState.OPEN
+        )
+
+    @property
     def current_ear_threshold(self) -> float:
         if self._ear_threshold_override is not None:
             return self._ear_threshold_override
