@@ -18,7 +18,6 @@ class GestureEvent(Enum):
     NONE = auto()
     LEFT_CLICK = auto()
     RIGHT_CLICK = auto()
-    BOTH_CLICK = auto()
     DOUBLE_LEFT_CLICK = auto()
     DOUBLE_RIGHT_CLICK = auto()
     SCROLL_UP = auto()
@@ -119,12 +118,14 @@ class _EyeBlinkTracker:
             self._min_ear = min(self._min_ear, ear)
             elapsed_ms = (time.perf_counter() - self._close_start_time) * 1000.0
             if not is_closed:
-                if elapsed_ms <= config.BLINK_MAX_DURATION_MS:
+                if config.BLINK_MIN_DURATION_MS <= elapsed_ms <= config.BLINK_MAX_DURATION_MS:
                     blink_fired = True
                     blink_depth = self._min_ear
                     self.state = _EyeState.BLINK_FIRED
                     logger.debug("%s blink (%.0fms, depth=%.3f)", self.name, elapsed_ms, blink_depth)
                 else:
+                    if elapsed_ms < config.BLINK_MIN_DURATION_MS:
+                        logger.debug("%s blink ignored (%.0fms < %dms min)", self.name, elapsed_ms, config.BLINK_MIN_DURATION_MS)
                     self.state = _EyeState.COOLDOWN
                     self._cooldown_frame_count = 0
             elif elapsed_ms > config.BLINK_MAX_DURATION_MS:
@@ -230,8 +231,6 @@ class GestureDetector:
 
         self._last_left_blink_time: float = 0.0
         self._last_right_blink_time: float = 0.0
-        self._last_left_blink_depth: float = 1.0
-        self._last_right_blink_depth: float = 1.0
 
         self._right_suppress_until: float = 0.0
         self._left_suppress_until: float = 0.0
@@ -262,9 +261,6 @@ class GestureDetector:
     def clear_ear_override(self) -> None:
         self._ear_threshold_override = None
 
-    def _is_deep_blink(self, depth: float, threshold: float) -> bool:
-        return depth < threshold * config.DUAL_BLINK_MIN_DEPTH_RATIO
-
     def update(
         self, landmarks: Any, frame_w: int, frame_h: int,
         left_iris_center_y: float, right_iris_center_y: float,
@@ -291,66 +287,33 @@ class GestureDetector:
 
         # Cross-eye sympathetic suppression
         if left_blinked and now < self._left_suppress_until:
-            if not self._is_deep_blink(left_depth, left_thresh):
-                left_blinked = False
-                logger.debug("Left blink suppressed (sympathetic, depth=%.3f)", left_depth)
+            left_blinked = False
+            logger.debug("Left blink suppressed (sympathetic, depth=%.3f)", left_depth)
 
         if right_blinked and now < self._right_suppress_until:
-            if not self._is_deep_blink(right_depth, right_thresh):
-                right_blinked = False
-                logger.debug("Right blink suppressed (sympathetic, depth=%.3f)", right_depth)
+            right_blinked = False
+            logger.debug("Right blink suppressed (sympathetic, depth=%.3f)", right_depth)
 
         if left_blinked:
             self._last_left_blink_time = now
-            self._last_left_blink_depth = left_depth
             self._right_suppress_until = now + config.CROSS_EYE_SUPPRESSION_MS / 1000.0
 
         if right_blinked:
             self._last_right_blink_time = now
-            self._last_right_blink_depth = right_depth
             self._left_suppress_until = now + config.CROSS_EYE_SUPPRESSION_MS / 1000.0
 
-        # Dual-blink detection with depth validation
-        both_blink = False
-
-        if left_blinked and right_blinked:
-            left_deep = self._is_deep_blink(left_depth, left_thresh)
-            right_deep = self._is_deep_blink(right_depth, right_thresh)
-
-            if left_deep and right_deep:
-                both_blink = True
-                events.append(GestureEvent.BOTH_CLICK)
-            elif left_deep and not right_deep:
-                right_blinked = False
-            elif right_deep and not left_deep:
-                left_blinked = False
+        # Single-eye blink → click events
+        if left_blinked:
+            if self._double_click.check_left(now):
+                events.append(GestureEvent.DOUBLE_LEFT_CLICK)
             else:
-                left_blinked = False
-                right_blinked = False
+                events.append(GestureEvent.LEFT_CLICK)
 
-        elif left_blinked or right_blinked:
-            dt = abs(self._last_left_blink_time - self._last_right_blink_time) * 1000.0
-            if 0 < dt < config.BLINK_BOTH_TOLERANCE_MS:
-                left_deep = self._is_deep_blink(self._last_left_blink_depth, left_thresh)
-                right_deep = self._is_deep_blink(self._last_right_blink_depth, right_thresh)
-                if left_deep and right_deep:
-                    both_blink = True
-                    events.append(GestureEvent.BOTH_CLICK)
-                    left_blinked = False
-                    right_blinked = False
-
-        if not both_blink:
-            if left_blinked:
-                if self._double_click.check_left(now):
-                    events.append(GestureEvent.DOUBLE_LEFT_CLICK)
-                else:
-                    events.append(GestureEvent.LEFT_CLICK)
-
-            if right_blinked:
-                if self._double_click.check_right(now):
-                    events.append(GestureEvent.DOUBLE_RIGHT_CLICK)
-                else:
-                    events.append(GestureEvent.RIGHT_CLICK)
+        if right_blinked:
+            if self._double_click.check_right(now):
+                events.append(GestureEvent.DOUBLE_RIGHT_CLICK)
+            else:
+                events.append(GestureEvent.RIGHT_CLICK)
 
         # Scroll via vertical gaze
         left_vg = compute_vertical_gaze_ratio(
@@ -396,8 +359,6 @@ class GestureDetector:
         self._double_click.reset()
         self._last_left_blink_time = 0.0
         self._last_right_blink_time = 0.0
-        self._last_left_blink_depth = 1.0
-        self._last_right_blink_depth = 1.0
         self._left_suppress_until = 0.0
         self._right_suppress_until = 0.0
         self._scroll_mode = False

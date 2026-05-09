@@ -265,9 +265,6 @@ def main() -> None:
                     elif event == GestureEvent.RIGHT_CLICK:
                         mouse.right_click()
                         overlay.flash_gesture("RIGHT CLICK")
-                    elif event == GestureEvent.BOTH_CLICK:
-                        mouse.middle_click()
-                        overlay.flash_gesture("MIDDLE CLICK")
                     elif event == GestureEvent.DOUBLE_LEFT_CLICK:
                         mouse.double_click()
                         overlay.flash_gesture("DOUBLE CLICK")

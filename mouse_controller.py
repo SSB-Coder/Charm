@@ -43,13 +43,6 @@ class MouseController:
         except pyautogui.PyAutoGUIException as exc:
             logger.warning("Right click failed: %s", exc)
 
-    def middle_click(self) -> None:
-        try:
-            pyautogui.click(button="middle")
-            logger.debug("Middle click")
-        except pyautogui.PyAutoGUIException as exc:
-            logger.warning("Middle click failed: %s", exc)
-
     def double_click(self) -> None:
         try:
             pyautogui.doubleClick(button="left")
