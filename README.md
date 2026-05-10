@@ -1,25 +1,32 @@
 # Project:Charm 👁️
+
 ### Eye-Tracking Mouse Control via Standard Webcam
 
-**Project:Charm** is a free, open-source, Python-based accessibility tool that transforms any standard webcam into a fully functional eye-tracking mouse controller. Designed for users with motor disabilities and spectacle wearers. No specialized infrared hardware required.
+**Project:Charm** is a free, open-source, Python-based accessibility tool that transforms any standard webcam into a fully functional eye-tracking mouse controller. Designed for users with motor disabilities and spectacle wearers — no specialized infrared hardware required.
 
 ---
 
 ## ✨ Features
 
-- **Iris-based gaze tracking** — MediaPipe Face Mesh (478-point model with iris refinement)
-- **One Euro Filter smoothing** — Adaptive filter: smooth when still, responsive when moving
-- **Dead zone filtering** — Suppresses micro-jitter below 8px threshold
-- **Blink-freeze** — Cursor freezes during blinks to prevent downward jump
-- **Eye gesture input** — Left/right/both blinks for clicks, double-blink for double-click
-- **Copy shortcut** — Double right-blink sends Ctrl+C
-- **Eye-roll scrolling** — Look up/down to activate scroll mode
-- **Adaptive EAR baseline** — Auto-calibrates blink threshold for spectacle wearers
-- **Cross-eye suppression** — Filters out sympathetic eye dips to prevent false clicks
-- **Runtime sensitivity controls** — Adjust smoothing and blink threshold via keyboard
-- **5-point calibration** — Interactive routine with persistent save to disk
-- **ESC kill switch** — Pause/resume mouse control without stopping the application
-- **Runs 100% locally** — No cloud calls, no data leaves your machine
+| Category | Feature | Description |
+|---|---|---|
+| **Gaze Tracking** | Iris-based gaze tracking | MediaPipe Face Mesh (478-point model with iris refinement) |
+| | One Euro Filter smoothing | Adaptive filter — smooth when still, responsive when moving |
+| | Dead zone filtering | Suppresses micro-jitter below configurable pixel threshold |
+| **Blink Detection** | Adaptive EAR baseline | Auto-calibrates blink threshold per-eye over 60 frames (spectacle-friendly) |
+| | Blink-freeze | Cursor freezes during blinks to prevent downward cursor jump |
+| | Cross-eye suppression | Filters out sympathetic eyelid dips to prevent false clicks |
+| | Blink depth tracking | Measures how deeply each eye closes; only deliberate blinks trigger actions |
+| | Squint disambiguation | Blinks held longer than 400 ms are ignored (squinting, not clicking) |
+| **Gesture Input** | Left-eye wink | Left click |
+| | Right-eye wink | Right click |
+| | Double left-wink | Double click |
+| | Double right-wink | Copy (Ctrl+C) |
+| | Sustained look up/down | Scroll mode activation |
+| **Controls** | Runtime sensitivity | Adjust smoothing and blink threshold via keyboard at any time |
+| | 5-point calibration | Interactive routine with persistent save to disk |
+| | ESC kill switch | Pause/resume mouse control without stopping the application |
+| **Privacy** | Runs 100% locally | No cloud calls — no data leaves your machine |
 
 ---
 
@@ -32,6 +39,7 @@
   - Download from: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
 
 ### Supported Platforms
+
 - ✅ Windows 10/11
 - ✅ macOS 12+
 - ✅ Linux (Ubuntu 20.04+)
@@ -41,12 +49,14 @@
 ## 🚀 Installation
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/SSB-Coder/Charm.git
 cd Charm
 ```
 
 ### 2. Create a virtual environment (recommended)
+
 ```bash
 python -m venv venv
 
@@ -58,11 +68,13 @@ source venv/bin/activate
 ```
 
 ### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Download the MediaPipe model
+
 ```bash
 curl -o face_landmarker.task https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
 ```
@@ -72,11 +84,13 @@ curl -o face_landmarker.task https://storage.googleapis.com/mediapipe-models/fac
 ## 🎮 Usage
 
 ### Basic Usage
+
 ```bash
 python main.py
 ```
 
 ### Command-Line Options
+
 | Flag | Description |
 |---|---|
 | `--debug` | Enable verbose DEBUG-level logging |
@@ -84,6 +98,7 @@ python main.py
 | `--no-mouse` | Disable mouse control (overlay-only testing mode) |
 
 ### Keyboard Controls
+
 | Key | Action |
 |---|---|
 | `ESC` | Pause / Resume mouse control |
@@ -93,13 +108,13 @@ python main.py
 | `-` / `=` | Decrease / Increase blink sensitivity |
 
 ### Gesture Controls
+
 | Gesture | Action |
 |---|---|
-| Left eye blink | Left click |
-| Right eye blink | Right click |
-| Both eyes blink | Middle click |
-| Double left-blink | Double click |
-| Double right-blink | Copy (Ctrl+C) |
+| Left eye wink | Left click |
+| Right eye wink | Right click |
+| Double left-wink | Double click |
+| Double right-wink | Copy (Ctrl+C) |
 | Look up (sustained) | Scroll up |
 | Look down (sustained) | Scroll down |
 
@@ -116,12 +131,13 @@ On first run, Project:Charm will guide you through a **5-point calibration**:
 5. Repeat for all 5 points: top-left, top-right, bottom-right, bottom-left, center
 
 **Tips for best calibration:**
+
 - Keep your head still throughout — only move your eyes
 - Maintain consistent distance from the screen (~50–70 cm)
 - Ensure even lighting on your face (avoid strong backlighting)
 - Calibration is saved to `~/.charm_calibration.json` and reloaded automatically
 
-To recalibrate at any time, press `c` during runtime or use `--calibrate` flag.
+To recalibrate at any time, press `c` during runtime or use the `--calibrate` flag.
 
 ---
 
@@ -143,6 +159,7 @@ Charm/
 ```
 
 ### Pipeline Flow
+
 ```
 Webcam Frame → MediaPipe FaceLandmarker (478 landmarks)
   → Iris Center Extraction (binocular average)
@@ -168,21 +185,23 @@ All tunable parameters are centralized in `config.py`. Key values:
 | `ONE_EURO_BETA` | `0.01` | Speed responsiveness (higher = more responsive) |
 | `DEAD_ZONE_PIXELS` | `8.0` | Minimum movement to register (pixels) |
 | `EAR_BLINK_THRESHOLD` | `0.19` | EAR below this triggers a blink |
-| `BLINK_MAX_DURATION_MS` | `400` | Max blink duration before classified as squint |
-| `BLINK_BOTH_TOLERANCE_MS` | `40` | Window for dual-blink detection (ms) |
+| `EAR_BLINK_CONSEC_FRAMES` | `2` | Consecutive sub-threshold frames to confirm closure |
+| `BLINK_MIN_DURATION_MS` | `100` | Minimum blink duration (ms) — ignores noise flickers |
+| `BLINK_MAX_DURATION_MS` | `400` | Maximum blink duration — longer is classified as a squint |
 | `CROSS_EYE_SUPPRESSION_MS` | `120` | Sympathetic dip suppression window (ms) |
-| `DUAL_BLINK_MIN_DEPTH_RATIO` | `0.65` | Depth required for dual-blink qualification |
+| `DOUBLE_CLICK_WINDOW_MS` | `500` | Time window for two blinks to register as double-click |
 | `SCROLL_SPEED_PIXELS` | `30` | Scroll amount per frame |
 
 ---
 
 ## ♿ Accessibility Features
 
-- **Adaptive EAR Baseline** — Auto-calibrates per-user resting eye state over 60 frames, compensating for spectacle frame occlusion
-- **Cross-Eye Sympathetic Suppression** — When one eye blinks, the other may dip involuntarily; shallow dips are filtered to prevent false dual-blinks
-- **Blink Depth Tracking** — Measures how deeply each eye closes; only deliberate blinks trigger clicks
+- **Adaptive EAR Baseline** — Auto-calibrates per-eye resting state over 60 frames, compensating for spectacle frame occlusion
+- **Cross-Eye Sympathetic Suppression** — When one eye blinks, the other may dip involuntarily; shallow dips are filtered to prevent false clicks
+- **Blink Depth Tracking** — Measures how deeply each eye closes; only deliberate blinks trigger actions
 - **Blink-Freeze** — Cursor freezes during blinks so clicks fire at the pre-blink position
-- **Squint Disambiguation** — Holding eyes closed >400ms is ignored (squinting, not blinking)
+- **Squint Disambiguation** — Holding eyes closed >400 ms is ignored (squinting, not blinking)
+- **Min Duration Filter** — Blinks shorter than 100 ms are discarded as noise
 
 ---
 

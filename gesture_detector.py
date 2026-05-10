@@ -312,15 +312,15 @@ class GestureDetector:
 
         if left_blinked:
             if self._double_click.check_left(now):
-                events.append(GestureEvent.DOUBLE_RIGHT_CLICK)
-            else:
-                events.append(GestureEvent.RIGHT_CLICK)
-
-        if right_blinked:
-            if self._double_click.check_right(now):
                 events.append(GestureEvent.DOUBLE_LEFT_CLICK)
             else:
                 events.append(GestureEvent.LEFT_CLICK)
+
+        if right_blinked:
+            if self._double_click.check_right(now):
+                events.append(GestureEvent.DOUBLE_RIGHT_CLICK)
+            else:
+                events.append(GestureEvent.RIGHT_CLICK)
 
         # Scroll via vertical gaze
         left_vg = compute_vertical_gaze_ratio(
