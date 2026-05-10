@@ -26,11 +26,11 @@ RIGHT_EYE: list[int] = [
     133, 173, 157, 158, 159, 160, 161, 246,
 ]
 
-LEFT_EYE_EAR: list[int] = [362, 385, 387, 263, 373, 380]
-RIGHT_EYE_EAR: list[int] = [33, 160, 158, 133, 153, 144]
+LEFT_EYE_EAR: list[int] = [33, 160, 158, 133, 153, 144]
+RIGHT_EYE_EAR: list[int] = [362, 385, 387, 263, 373, 380]
 
-LEFT_EYE_TOP_BOTTOM: list[int] = [386, 374]
-RIGHT_EYE_TOP_BOTTOM: list[int] = [159, 145]
+LEFT_EYE_TOP_BOTTOM: list[int] = [159, 145]
+RIGHT_EYE_TOP_BOTTOM: list[int] = [386, 374]
 
 ONE_EURO_MIN_CUTOFF: float = 0.8
 ONE_EURO_BETA: float = 0.01
